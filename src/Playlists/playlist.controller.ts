@@ -27,9 +27,7 @@ export class PlaylistsController {
     private readonly trackService: TracksService,
   ) {}
 
-  @ApiOperation({
-    description: 'Створити блок Playlist',
-  })
+  @ApiOperation({ summary: 'Створити блок Playlist' })
   @Post()
   async addPlaylist(@Body() createPlaylistDto: CreatePlaylistDto) {
     try {
@@ -43,23 +41,22 @@ export class PlaylistsController {
     }
   }
 
-  // @Roles(UserRoles.ADMIN, UserRoles.USER)
-  // @UseGuards(RolesGuard)
-  // @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({ summary: 'Get all Playlists' })
+  @Roles(UserRoles.ADMIN, UserRoles.USER)
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Get()
   async getAllPlaylists() {
-    try {
-      return await this.playlistsService.getPlaylists();
-    } catch (e) {
-      throw new CreateException(`Cannot edit article. ${e.message}`);
-    }
+    return await this.playlistsService.getPlaylists();
   }
 
+  @ApiOperation({ summary: 'Get current Playlist' })
   @Get('/:id')
   getPlaylist(@Param('id') id: string) {
     return this.playlistsService.getCurrentPlaylist(id);
   }
 
+  @ApiOperation({ summary: 'Update current Playlist' })
   async updatePlaylist(
     @Param('id') prodId: string,
     @Body() updateFields: UpdatePlaylistDto,
@@ -68,6 +65,7 @@ export class PlaylistsController {
     return null;
   }
 
+  @ApiOperation({ summary: 'Delete current Playlist' })
   @Delete(':id')
   async deletePlaylist(@Param('id') slug: string) {
     await this.playlistsService.deletePlaylist(slug);

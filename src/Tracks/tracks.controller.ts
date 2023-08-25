@@ -3,16 +3,24 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
+  HttpStatus,
   Param,
   Patch,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AddTrackDto, CreateTrackDto, UpdateTrackDto } from './dto/tracks.dto';
 import { TracksService } from './tracks.service';
 import { AlbumService } from '../Albums/album.service';
 import { PlaylistsService } from '../Playlists/playlist.service';
+import {
+  EXAMPLE_CREATE_TRACK_BODY,
+  EXAMPLE_CREATE_TRACK_RESPONSE,
+  EXAMPLE_GET_TRACKS_RESPONSE,
+} from './config/track.config';
 
 @ApiTags('CRUD for track')
 @Controller('track')
@@ -23,36 +31,11 @@ export class TrackController {
     private readonly playlistService: PlaylistsService,
   ) {}
 
-  @ApiOperation({
-    description: 'Create track',
-  })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        name: {
-          type: 'string',
-        },
-        slug: {
-          type: 'string',
-        },
-        artist: {
-          type: 'string',
-        },
-        image: {
-          type: 'string',
-        },
-        text: {
-          type: 'string',
-        },
-        audioSrc: {
-          type: 'string',
-        },
-        listens: {
-          type: 'number',
-        },
-      },
-    },
+  @ApiOperation({ summary: 'Create track' })
+  @ApiBody({ schema: EXAMPLE_CREATE_TRACK_BODY })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    schema: { example: EXAMPLE_CREATE_TRACK_RESPONSE },
   })
   @Post('/create')
   async addTrack(@Body() trackData: CreateTrackDto) {
@@ -60,7 +43,11 @@ export class TrackController {
   }
 
   @ApiOperation({
-    description: 'Get all tracks',
+    summary: 'Get all tracks',
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    schema: { type: 'array', example: EXAMPLE_GET_TRACKS_RESPONSE },
   })
   @Get()
   async getAllTracks() {
@@ -68,7 +55,11 @@ export class TrackController {
   }
 
   @ApiOperation({
-    description: 'Get track by slug',
+    summary: 'Get track by slug',
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    schema: { example: EXAMPLE_CREATE_TRACK_RESPONSE },
   })
   @Get('/:slug')
   async getCurrentTrack(@Param('slug') slug: string) {
@@ -76,9 +67,9 @@ export class TrackController {
   }
 
   @ApiOperation({
-    description: 'Update track by slug',
+    summary: 'Update track by slug',
   })
-  @Patch(':slug')
+  @Put(':slug')
   async updateTrackBySlug(
     @Param('slug') slug: string,
     @Body() updatedFields: UpdateTrackDto,
@@ -87,7 +78,7 @@ export class TrackController {
   }
 
   @ApiOperation({
-    description: 'delete track by slug',
+    summary: 'delete track by slug',
   })
   @Delete('/:slug')
   async deletePlaylist(@Param('slug') slug: string) {
@@ -95,45 +86,28 @@ export class TrackController {
     return null;
   }
 
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        slug: {
-          type: 'string',
-        },
-      },
-    },
-  })
+  @ApiOperation({ summary: 'add track in album' })
+  @ApiResponse({ schema: { example: {} } })
   @Patch('addTrackToAlbum/:trackSlug')
   async addTrackToAlbum(
-    @Param('trackSlug') slug: string,
-    @Body() addTrackDto: AddTrackDto,
+    @Query('trackSlug') trackSlug: string,
+    @Query('albumSlug') albumSlug: string,
   ) {
-    const track = await this.tracksService.getTrackBySlug(slug);
-    await this.albumService.addTrackToAlbum(addTrackDto.slug, track.id);
+    return await this.albumService.addTrackToAlbum(albumSlug, trackSlug);
   }
 
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        slug: {
-          type: 'string',
-        },
-      },
-    },
-  })
+  @ApiOperation({ summary: 'add track in playlist' })
   @Patch('addTrackToPlaylist/:trackSlug')
   async addTrackToPlaylist(
-    @Param('trackSlug') slug: string,
-    @Body() addTrackDto: AddTrackDto,
+    @Query('trackSlug') trackSlug: string,
+    @Query('playlistSlug') playlistSlug: string,
   ) {
-    const track = await this.tracksService.getTrackBySlug(slug);
-    await this.playlistService.addTrackToPlaylist(addTrackDto.slug, track.id);
+    const track = await this.tracksService.getTrackBySlug(trackSlug);
+    // await this.playlistService.addTrackToPlaylist(playlistSlug, track.id);
   }
 
-  @Put('listened/:slug')
+  @ApiOperation({ summary: 'user listened track' })
+  @Patch('listened/:slug')
   async listenedTrack(@Param('slug') slug: string) {
     await this.tracksService.listenedTrack(slug);
   }

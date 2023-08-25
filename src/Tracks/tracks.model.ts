@@ -24,4 +24,7 @@ export class Track {
   listens: number;
 }
 
-export const TrackSchema = SchemaFactory.createForClass(Track);
+export const TrackSchema = SchemaFactory.createForClass(Track).set(
+  'versionKey',
+  false,
+);

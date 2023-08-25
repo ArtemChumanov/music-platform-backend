@@ -3,16 +3,19 @@ import { UserRoles } from './dto/user-role';
 
 @Schema()
 export class User {
-  @Prop()
+  @Prop({ required: true, min: 4 })
   name: string;
 
   @Prop({ default: UserRoles.USER })
   role: UserRoles;
 
-  @Prop()
+  @Prop({ required: true, unique: true, min: 5 })
   email: string;
 
-  @Prop()
+  @Prop({ required: true })
   password: string;
 }
-export const UserSchema = SchemaFactory.createForClass(User);
+export const UserSchema = SchemaFactory.createForClass(User).set(
+  'versionKey',
+  false,
+);

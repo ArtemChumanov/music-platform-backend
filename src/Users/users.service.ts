@@ -8,6 +8,7 @@ import { Model } from 'mongoose';
 import { User } from './users.model';
 import { CreateUserDto } from './dto/users.dto';
 import * as bcrypt from 'bcrypt';
+import { CreateException } from '../common/exceptions/http.exception';
 
 @Injectable()
 export class UsersService {
@@ -16,12 +17,17 @@ export class UsersService {
   async createUser(data: CreateUserDto) {
     try {
       const passwordHash = bcrypt.hashSync(data.password, 5);
+
       return await this.userModel.create({
         ...data,
         password: passwordHash,
       });
     } catch (error) {
-      throw new BadRequestException();
+      if (error.code === 11000)
+        return new CreateException(
+          'User with this email already exist',
+        ).getResponse();
+      return new BadRequestException('incorrect data').getResponse();
     }
   }
   async getUserByParam(arg) {

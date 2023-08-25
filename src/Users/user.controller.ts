@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Put,
@@ -13,14 +15,21 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { AuthUserDto, CreateUserDto } from './dto/users.dto';
 import { UsersService } from './users.service';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from '../Auth/auth.service';
+import {
+  EXAMPLE_CREATE_USER_RESPONSE,
+  EXAMPLE_CREATE_USER_BODY,
+  EXAMPLE_AUTH_USER_BODY,
+  EXAMPLE_AUTH_USER_RESPONSE,
+} from './users.swagger.examples';
 
 @ApiTags('User registration, auth, get user data')
-@ApiBearerAuth()
+@ApiBearerAuth('access-token')
 @Controller('user')
 export class UserController {
   constructor(
@@ -28,55 +37,33 @@ export class UserController {
     private readonly authService: AuthService,
   ) {}
 
-  @ApiOperation({
-    description: 'User registration',
-  })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        name: {
-          type: 'string',
-        },
-        email: {
-          type: 'string',
-        },
-        password: {
-          type: 'string',
-        },
-      },
-    },
+  @ApiOperation({ summary: 'Create new user' })
+  @ApiBody({ schema: EXAMPLE_CREATE_USER_BODY })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    schema: { example: EXAMPLE_CREATE_USER_RESPONSE },
   })
   @Post('/signUp')
   async createUser(@Body() creatUserDto: CreateUserDto) {
-    const generatedId = await this.userService.createUser(creatUserDto);
-    return { id: generatedId };
+    return await this.userService.createUser(creatUserDto);
   }
 
-  @ApiOperation({
-    description: 'User Authorization',
-  })
+  @ApiOperation({ summary: 'User Authorization' })
+  @ApiBody({ schema: EXAMPLE_AUTH_USER_BODY })
   @ApiResponse({
-    status: 200,
-    schema: {
-      type: 'object',
-      properties: {
-        email: {
-          type: 'string',
-        },
-        password: {
-          type: 'string',
-        },
-      },
-    },
+    status: HttpStatus.CREATED,
+    schema: { example: EXAMPLE_AUTH_USER_RESPONSE },
   })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Post('/signIn')
   async signIn(@Body() authUserDto: AuthUserDto) {
     return await this.authService.signIn(authUserDto);
   }
 
-  @ApiOperation({
-    description: 'Get User data',
+  @ApiOperation({ summary: 'Get User data' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    schema: { example: [EXAMPLE_CREATE_USER_RESPONSE] },
   })
   @UseGuards(AuthGuard('jwt'))
   @Get()

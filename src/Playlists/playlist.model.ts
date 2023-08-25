@@ -17,4 +17,7 @@ export class Playlist {
   tracks: [Track];
 }
 
-export const PlaylistSchema = SchemaFactory.createForClass(Playlist);
+export const PlaylistSchema = SchemaFactory.createForClass(Playlist).set(
+  'versionKey',
+  false,
+);

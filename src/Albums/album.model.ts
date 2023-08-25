@@ -7,7 +7,7 @@ export class Album {
   @Prop()
   name: string;
 
-  @Prop()
+  @Prop({ unique: true })
   slug: string;
 
   @Prop()
@@ -25,4 +25,7 @@ export class Album {
   tracks: [Track];
 }
 
-export const AlbumSchema = SchemaFactory.createForClass(Album);
+export const AlbumSchema = SchemaFactory.createForClass(Album).set(
+  'versionKey',
+  false,
+);

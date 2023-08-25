@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Track } from './tracks.model';
 import { CreateTrackDto } from './dto/tracks.dto';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class TracksService {
@@ -16,36 +17,47 @@ export class TracksService {
   }
 
   async getTracks() {
-    return this.trackModel.aggregate([
-      {
-        $lookup: {
-          from: 'artists',
-          localField: 'artist',
-          foreignField: '_id',
-          as: 'artist',
+    try {
+      return this.trackModel.aggregate([
+        {
+          $lookup: {
+            from: 'artists',
+            localField: 'artist',
+            foreignField: '_id',
+            as: 'artist',
+          },
         },
-      },
-      {
-        $project: {
-          _id: 0,
-          name: 1,
-          slug: 1,
-          artist: 1,
-          image: 1,
-          text: 1,
-          audioSrc: 1,
-          listens: 1,
+        {
+          $project: {
+            _id: 0,
+            name: 1,
+            slug: 1,
+            artist: 1,
+            image: 1,
+            text: 1,
+            audioSrc: 1,
+            listens: 1,
+          },
         },
-      },
-    ]);
+      ]);
+    } catch (e) {
+      return new BadRequestException();
+    }
   }
 
-  async getTrackBySlug(slug) {
-    return await this.trackModel
-      .findOne({
-        slug: slug,
-      })
-      .exec();
+  async getTrackBySlug(slug): Promise<any> {
+    try {
+      const track = await this.trackModel
+        .findOne({
+          slug: slug,
+        })
+        .exec();
+      if (!track) return new NotFoundError('track not found');
+
+      return track;
+    } catch (e) {
+      return new BadRequestException().getResponse();
+    }
   }
 
   async updateTrack(slug, updatedFields) {
@@ -53,11 +65,11 @@ export class TracksService {
   }
 
   async deleteTrack(slug: string) {
-    const del = await this.trackModel.deleteOne({ slug });
-    return del;
+    return this.trackModel.deleteOne({ slug });
   }
 
-  async listenedTrack(slug) {
-    return this.trackModel.updateOne({ slug }, { $inc: { listens: 1 } });
+  async listenedTrack(slug: string) {
+    this.trackModel.updateOne({ slug }, { $inc: { listens: 1 } });
+    return { listened: true };
   }
 }
