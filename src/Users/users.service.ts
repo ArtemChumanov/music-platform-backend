@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './users.model';
@@ -31,8 +27,7 @@ export class UsersService {
     }
   }
   async getUserByParam(arg) {
-    const res = await this.userModel.findOne(arg);
-    return res;
+    return this.userModel.findOne(arg);
   }
 
   async getUsers() {

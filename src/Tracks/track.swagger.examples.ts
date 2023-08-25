@@ -1,28 +1,10 @@
 export const EXAMPLE_CREATE_TRACK_BODY = {
-  type: 'object',
-  properties: {
-    name: {
-      type: 'string',
-    },
-    slug: {
-      type: 'string',
-    },
-    artist: {
-      type: 'string',
-    },
-    image: {
-      type: 'string',
-    },
-    text: {
-      type: 'string',
-    },
-    audioSrc: {
-      type: 'string',
-    },
-    listens: {
-      type: 'number',
-    },
-  },
+  name: 'Default Track',
+  slug: 'track-slug',
+  artist: 'Kalush',
+  image: 'image.png',
+  text: 'Music track text text text text text',
+  audioSrc: '123/ew',
 };
 
 export const EXAMPLE_CREATE_TRACK_RESPONSE = {

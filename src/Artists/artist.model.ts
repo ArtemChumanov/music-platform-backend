@@ -1,6 +1,4 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose from 'mongoose';
-import { Track } from '../Tracks/tracks.model';
 
 @Schema()
 export class Artist {

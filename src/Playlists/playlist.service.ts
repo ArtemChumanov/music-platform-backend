@@ -1,14 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
 import { Playlist } from './playlist.model';
 import { CreatePlaylistDto, UpdatePlaylistDto } from './dto/playlist.dto';
+import { TracksService } from '../Tracks/tracks.service';
 
 @Injectable()
 export class PlaylistsService {
   constructor(
     @InjectModel('Playlist') private readonly playlistModel: Model<Playlist>,
+    private readonly tracksService: TracksService,
   ) {}
 
   async insertPlaylist(createPlaylistDto: CreatePlaylistDto) {
@@ -39,10 +41,10 @@ export class PlaylistsService {
     ]);
   }
 
-  async getCurrentPlaylist(playlistId: string) {
+  async getCurrentPlaylist(playlistSlug: string) {
     return await this.playlistModel
       .findOne({
-        slug: playlistId,
+        slug: playlistSlug,
       })
       .exec();
   }
@@ -63,16 +65,28 @@ export class PlaylistsService {
     return this.playlistModel.deleteOne({ slug: playlistId });
   }
 
-  async addTrackToPlaylist(playlistSlug: string, trackId: any) {
-    return this.playlistModel.updateOne(
-      {
-        slug: playlistSlug,
-      },
-      {
-        $push: {
-          tracks: trackId,
+  async addTrackToPlaylist(playlistSlug: string, trackSlug: string) {
+    const track = await this.tracksService.getTrackBySlug(trackSlug);
+    const playlist = await this.getCurrentPlaylist(playlistSlug);
+
+    console.log(playlist, track);
+    if (!track || !playlist) {
+      return new BadRequestException({
+        message: 'not found album or playlist',
+      }).getResponse();
+    }
+
+    if (!playlist.tracks.includes(track.id)) {
+      return this.playlistModel.updateOne(
+        {
+          slug: playlistSlug,
         },
-      },
-    );
+        {
+          $push: {
+            tracks: track.id,
+          },
+        },
+      );
+    }
   }
 }

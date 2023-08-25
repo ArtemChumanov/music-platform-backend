@@ -11,10 +11,10 @@ export class Track {
   @Prop()
   artist: string;
 
-  @Prop()
+  @Prop({ default: 'image.png' })
   image?: string;
 
-  @Prop()
+  @Prop({ default: '' })
   text: string;
 
   @Prop()

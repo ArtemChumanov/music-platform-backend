@@ -1,10 +1,4 @@
-import {
-  IsBoolean,
-  IsNotEmpty,
-  IsNumber,
-  IsString,
-  IsOptional,
-} from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsOptional } from 'class-validator';
 
 export class CreateTrackDto {
   @IsNotEmpty()
@@ -27,9 +21,9 @@ export class CreateTrackDto {
   @IsString()
   text?: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  audioSrc?: string;
+  audioSrc: string;
 }
 
 export class UpdateTrackDto {

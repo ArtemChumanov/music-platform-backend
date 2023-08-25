@@ -4,7 +4,6 @@ import { Album } from './album.model';
 import { Model } from 'mongoose';
 import { CreateAlbumDto } from './dto/album.dto';
 import { TracksService } from '../Tracks/tracks.service';
-import { ExceptionHandler } from '@nestjs/core/errors/exception-handler';
 
 @Injectable()
 export class AlbumService {

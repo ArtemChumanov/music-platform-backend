@@ -3,16 +3,16 @@ import {
   Controller,
   Delete,
   Get,
-  HttpException,
   HttpStatus,
   Param,
   Patch,
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { AddTrackDto, CreateTrackDto, UpdateTrackDto } from './dto/tracks.dto';
+import { CreateTrackDto, UpdateTrackDto } from './dto/tracks.dto';
 import { TracksService } from './tracks.service';
 import { AlbumService } from '../Albums/album.service';
 import { PlaylistsService } from '../Playlists/playlist.service';
@@ -20,7 +20,11 @@ import {
   EXAMPLE_CREATE_TRACK_BODY,
   EXAMPLE_CREATE_TRACK_RESPONSE,
   EXAMPLE_GET_TRACKS_RESPONSE,
-} from './config/track.config';
+} from './track.swagger.examples';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../guards/roles-guard';
+import { Roles } from '../guards/roles.decorator';
+import { UserRoles } from '../Users/dto/user-role';
 
 @ApiTags('CRUD for track')
 @Controller('track')
@@ -32,12 +36,14 @@ export class TrackController {
   ) {}
 
   @ApiOperation({ summary: 'Create track' })
-  @ApiBody({ schema: EXAMPLE_CREATE_TRACK_BODY })
+  @ApiBody({ schema: { example: EXAMPLE_CREATE_TRACK_BODY } })
   @ApiResponse({
     status: HttpStatus.CREATED,
     schema: { example: EXAMPLE_CREATE_TRACK_RESPONSE },
   })
   @Post('/create')
+  @Roles(UserRoles.ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   async addTrack(@Body() trackData: CreateTrackDto) {
     return await this.tracksService.insertTrack(trackData);
   }
@@ -66,9 +72,7 @@ export class TrackController {
     return await this.tracksService.getTrackBySlug(slug);
   }
 
-  @ApiOperation({
-    summary: 'Update track by slug',
-  })
+  @ApiOperation({ summary: 'Update track by slug' })
   @Put(':slug')
   async updateTrackBySlug(
     @Param('slug') slug: string,
@@ -77,9 +81,7 @@ export class TrackController {
     return await this.tracksService.updateTrack(slug, updatedFields);
   }
 
-  @ApiOperation({
-    summary: 'delete track by slug',
-  })
+  @ApiOperation({ summary: 'delete track by slug' })
   @Delete('/:slug')
   async deletePlaylist(@Param('slug') slug: string) {
     await this.tracksService.deleteTrack(slug);
@@ -102,8 +104,10 @@ export class TrackController {
     @Query('trackSlug') trackSlug: string,
     @Query('playlistSlug') playlistSlug: string,
   ) {
-    const track = await this.tracksService.getTrackBySlug(trackSlug);
-    // await this.playlistService.addTrackToPlaylist(playlistSlug, track.id);
+    return await this.playlistService.addTrackToPlaylist(
+      playlistSlug,
+      trackSlug,
+    );
   }
 
   @ApiOperation({ summary: 'user listened track' })

@@ -36,6 +36,7 @@ export class AlbumController {
     status: HttpStatus.OK,
     schema: { example: [EXAMPLE_ALBUM_RESPONSE] },
   })
+  @UseGuards(AuthGuard('jwt'))
   @Get()
   async getAlbums() {
     return this.albumService.getAlbums();
@@ -46,19 +47,21 @@ export class AlbumController {
     status: HttpStatus.OK,
     schema: { example: EXAMPLE_ALBUM_RESPONSE },
   })
+  @UseGuards(AuthGuard('jwt'))
   @Get('/:slug')
   async getAlbumBySlug(@Param('slug') slug: string) {
     return this.albumService.getAlbumBySlug(slug);
   }
 
-  @ApiOperation({ summary: 'Сворити альбом' })
-  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({ summary: 'Сворити альбом(адмін)' })
   @ApiBody({ schema: { example: EXAMPLE_ALBUM_BODY } })
   @ApiResponse({
     status: HttpStatus.CREATED,
     schema: { example: EXAMPLE_ALBUM_RESPONSE },
   })
-  @Post()
+  @Post('/admin')
+  @Roles(UserRoles.ADMIN)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   async createAlbum(@Body() createAlbumDto: CreateAlbumDto) {
     return await this.albumService.createAlbum(createAlbumDto);
   }

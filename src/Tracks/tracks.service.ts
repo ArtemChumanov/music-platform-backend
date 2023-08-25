@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Track } from './tracks.model';
 import { CreateTrackDto } from './dto/tracks.dto';
-import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class TracksService {
@@ -46,18 +45,11 @@ export class TracksService {
   }
 
   async getTrackBySlug(slug): Promise<any> {
-    try {
-      const track = await this.trackModel
-        .findOne({
-          slug: slug,
-        })
-        .exec();
-      if (!track) return new NotFoundError('track not found');
-
-      return track;
-    } catch (e) {
-      return new BadRequestException().getResponse();
-    }
+    return await this.trackModel
+      .findOne({
+        slug: slug,
+      })
+      .exec();
   }
 
   async updateTrack(slug, updatedFields) {

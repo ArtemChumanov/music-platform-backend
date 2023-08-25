@@ -10,10 +10,12 @@ export class Playlist {
   @Prop()
   slug: string;
 
-  @Prop()
+  @Prop({ default: 'default.png' })
   image: string;
 
-  @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: Track.name }])
+  @Prop([
+    { type: mongoose.Schema.Types.ObjectId, ref: Track.name, default: [] },
+  ])
   tracks: [Track];
 }
 

@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Put,
 } from '@nestjs/common';
 
 import { PlaylistsService } from './playlist.service';
@@ -15,17 +16,13 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserRoles } from '../Users/dto/user-role';
 import { RolesGuard } from '../guards/roles-guard';
 import { Roles } from '../guards/roles.decorator';
-import { TracksService } from '../Tracks/tracks.service';
 import { CreateException } from '../common/exceptions/http.exception';
 
 @ApiTags('CRUD for playlist')
 @ApiBearerAuth('access-token')
 @Controller('playlist')
 export class PlaylistsController {
-  constructor(
-    private readonly playlistsService: PlaylistsService,
-    private readonly trackService: TracksService,
-  ) {}
+  constructor(private readonly playlistsService: PlaylistsService) {}
 
   @ApiOperation({ summary: 'Створити блок Playlist' })
   @Post()
@@ -42,21 +39,23 @@ export class PlaylistsController {
   }
 
   @ApiOperation({ summary: 'Get all Playlists' })
-  @Roles(UserRoles.ADMIN, UserRoles.USER)
-  @UseGuards(RolesGuard)
-  @UseGuards(AuthGuard('jwt'))
   @Get()
+  @Roles(UserRoles.USER)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   async getAllPlaylists() {
     return await this.playlistsService.getPlaylists();
   }
 
   @ApiOperation({ summary: 'Get current Playlist' })
+  @UseGuards(AuthGuard('jwt'))
   @Get('/:id')
   getPlaylist(@Param('id') id: string) {
     return this.playlistsService.getCurrentPlaylist(id);
   }
 
   @ApiOperation({ summary: 'Update current Playlist' })
+  @UseGuards(AuthGuard('jwt'))
+  @Put()
   async updatePlaylist(
     @Param('id') prodId: string,
     @Body() updateFields: UpdatePlaylistDto,
@@ -66,6 +65,7 @@ export class PlaylistsController {
   }
 
   @ApiOperation({ summary: 'Delete current Playlist' })
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
   async deletePlaylist(@Param('id') slug: string) {
     await this.playlistsService.deletePlaylist(slug);
