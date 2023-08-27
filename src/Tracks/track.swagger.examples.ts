@@ -7,6 +7,26 @@ export const EXAMPLE_CREATE_TRACK_BODY = {
   audioSrc: '123/ew',
 };
 
+export const EXAMPLE_UPLOAD_BODY = {
+  schema: {
+    type: 'object',
+    properties: {
+      audio: {
+        type: 'string',
+        format: 'binary',
+      },
+    },
+  },
+};
+
+export const EXAMPLE_UPDATE_TRACK_BODY = {
+  name: 'TrackNAme',
+  artist: 'ArtistName',
+  image: 'default.svg',
+  text: '',
+  audioSrc: '',
+};
+
 export const EXAMPLE_CREATE_TRACK_RESPONSE = {
   name: 'TrackNAme',
   slug: 'track-slug',

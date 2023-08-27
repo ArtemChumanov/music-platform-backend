@@ -1,9 +1,14 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Album } from './album.model';
 import { Model } from 'mongoose';
 import { CreateAlbumDto } from './dto/album.dto';
 import { TracksService } from '../Tracks/tracks.service';
+import unbindImageByAddress from '../utils/unbindImages';
 
 @Injectable()
 export class AlbumService {
@@ -12,8 +17,9 @@ export class AlbumService {
     private readonly tracksService: TracksService,
   ) {}
 
-  async getAlbums() {
+  async getAlbums(options: any = {}): Promise<Album | Album[]> {
     return this.albumModel.aggregate([
+      { $match: options },
       {
         $lookup: {
           from: 'tracks',
@@ -25,7 +31,7 @@ export class AlbumService {
       {
         $project: {
           _id: 0,
-          title: 1,
+          name: 1,
           slug: 1,
           artist: 1,
           tracks: 1,
@@ -33,8 +39,20 @@ export class AlbumService {
       },
     ]);
   }
+
+  async getCurrentAlbum(slug: string) {
+    return await this.getAlbums({ slug: slug });
+  }
+
   async getAlbumBySlug(slug: string) {
-    return await this.albumModel.findOne({ slug }).exec();
+    const album = this.getCurrentAlbum(slug);
+    if (!album)
+      return new NotFoundException({
+        status: 404,
+        message: 'Not Found album by slug',
+      }).getResponse();
+
+    return album;
   }
 
   async createAlbum(createAlbumDto: CreateAlbumDto) {
@@ -44,10 +62,9 @@ export class AlbumService {
 
   async addTrackToAlbum(albumSlug: string, trackSlug: string) {
     const track = await this.tracksService.getTrackBySlug(trackSlug);
-    const album = await this.getAlbumBySlug(albumSlug);
+    const album = await this.albumModel.findOne({ slug: albumSlug }).exec();
 
     if (!track || !album) {
-      console.log(23);
       return new BadRequestException({
         message: 'not found album or track',
       }).getResponse();
@@ -70,5 +87,27 @@ export class AlbumService {
         message: 'track in album',
       }).getResponse();
     }
+  }
+
+  async updatePhoto(photoUrl, albumSlug) {
+    const album = (await this.getCurrentAlbum(albumSlug)) as Album;
+    const oldPhoto = album.image;
+
+    if (!!photoUrl) {
+      const result = await this.albumModel.updateOne(
+        { slug: albumSlug },
+        { image: photoUrl },
+      );
+      console.log(result);
+      if (!!oldPhoto /*&& !!result.affected*/) {
+        if (oldPhoto != 'default.png') {
+          await unbindImageByAddress(oldPhoto);
+        }
+      } else {
+        await unbindImageByAddress(photoUrl);
+      }
+      return photoUrl;
+    }
+    return oldPhoto;
   }
 }

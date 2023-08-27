@@ -7,7 +7,7 @@ export class Playlist {
   @Prop()
   title: string;
 
-  @Prop()
+  @Prop({ unique: true })
   slug: string;
 
   @Prop({ default: 'default.png' })

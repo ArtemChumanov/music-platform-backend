@@ -3,7 +3,7 @@ import { IsNotEmpty, IsString } from 'class-validator';
 export class CreateAlbumDto {
   @IsNotEmpty()
   @IsString()
-  title: string;
+  name: string;
 
   @IsNotEmpty()
   @IsString()
@@ -15,10 +15,4 @@ export class CreateAlbumDto {
 
   @IsString()
   image?: string;
-}
-
-export class AddTracksToAlbumDto {
-  @IsNotEmpty()
-  @IsString()
-  slug: string;
 }

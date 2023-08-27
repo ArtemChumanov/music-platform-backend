@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Track } from './tracks.model';
@@ -57,11 +61,25 @@ export class TracksService {
   }
 
   async deleteTrack(slug: string) {
-    return this.trackModel.deleteOne({ slug });
+    try {
+      const deletedTrack = await this.trackModel.deleteOne({ slug }).exec();
+      if (deletedTrack.deletedCount) {
+        return { success: true };
+      }
+      return new NotFoundException({
+        message: 'Not found track by slug',
+      }).getResponse();
+    } catch (e) {
+      return new BadRequestException().getResponse();
+    }
   }
 
   async listenedTrack(slug: string) {
     this.trackModel.updateOne({ slug }, { $inc: { listens: 1 } });
     return { listened: true };
+  }
+
+  async updateTrackSrc(slug, audioSrc) {
+    return this.trackModel.updateOne({ slug }, { audioSrc });
   }
 }

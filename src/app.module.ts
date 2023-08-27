@@ -6,6 +6,8 @@ import { UsersModule } from './Users/users.module';
 import { AuthModule } from './Auth/auth.module';
 import { AlbumModule } from './Albums/album.module';
 import { ArtistModule } from './Artists/artist.module';
+import { APP_FILTER } from '@nestjs/core';
+import { AllExceptionFilter } from './utils/allExcaptionFilter';
 
 @Module({
   imports: [
@@ -20,6 +22,11 @@ import { ArtistModule } from './Artists/artist.module';
     ArtistModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionFilter,
+    },
+  ],
 })
 export class AppModule {}

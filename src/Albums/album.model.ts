@@ -13,7 +13,7 @@ export class Album {
   @Prop()
   artist: string;
 
-  @Prop()
+  @Prop({ default: 'img.png' })
   image: string;
 
   @Prop()

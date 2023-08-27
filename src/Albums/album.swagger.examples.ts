@@ -1,11 +1,12 @@
 export const EXAMPLE_ALBUM_BODY = {
-  title: 'Name',
+  name: 'Name',
   slug: 'album-slug',
   artist: 'artistName',
   image: 'default.png',
 };
 
 export const EXAMPLE_ALBUM_RESPONSE = {
+  name: 'Name',
   slug: 'album-slug',
   artist: 'artistName',
   image: 'default.png',

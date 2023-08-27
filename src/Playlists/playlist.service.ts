@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
@@ -13,14 +17,13 @@ export class PlaylistsService {
     private readonly tracksService: TracksService,
   ) {}
 
-  async insertPlaylist(createPlaylistDto: CreatePlaylistDto) {
-    const newProduct = new this.playlistModel(createPlaylistDto);
-    const result = await newProduct.save();
-    return result.id as string;
-  }
-
-  async getPlaylists() {
+  async getPlaylistAggregation(
+    slug?: string,
+    limit: number = null,
+  ): Promise<Playlist[] | Playlist> {
     return this.playlistModel.aggregate([
+      { $match: slug ? { slug } : {} },
+      { $limit: limit ?? 1000 },
       {
         $lookup: {
           from: 'tracks',
@@ -31,7 +34,7 @@ export class PlaylistsService {
       },
       {
         $project: {
-          _id: 0,
+          _id: 1,
           title: 1,
           slug: 1,
           image: 1,
@@ -40,13 +43,25 @@ export class PlaylistsService {
       },
     ]);
   }
+  async insertPlaylist(createPlaylistDto: CreatePlaylistDto) {
+    const newProduct = new this.playlistModel(createPlaylistDto);
+    return await newProduct.save();
+  }
+
+  async getPlaylists() {
+    return this.getPlaylistAggregation();
+  }
 
   async getCurrentPlaylist(playlistSlug: string) {
-    return await this.playlistModel
-      .findOne({
-        slug: playlistSlug,
-      })
-      .exec();
+    const playlist = (await this.getPlaylistAggregation(
+      playlistSlug,
+      1,
+    )) as Playlist[];
+    return playlist?.length
+      ? playlist
+      : new NotFoundException({
+          message: 'Not found playlist by slug',
+        }).getResponse();
   }
 
   async updatePlaylistBySlug(
@@ -67,7 +82,7 @@ export class PlaylistsService {
 
   async addTrackToPlaylist(playlistSlug: string, trackSlug: string) {
     const track = await this.tracksService.getTrackBySlug(trackSlug);
-    const playlist = await this.getCurrentPlaylist(playlistSlug);
+    const playlist = await this.getPlaylistAggregation(playlistSlug, 1);
 
     console.log(playlist, track);
     if (!track || !playlist) {
@@ -76,6 +91,7 @@ export class PlaylistsService {
       }).getResponse();
     }
 
+    // @ts-ignore
     if (!playlist.tracks.includes(track.id)) {
       return this.playlistModel.updateOne(
         {

@@ -6,17 +6,22 @@ import {
   Param,
   Delete,
   UseGuards,
-  Put,
+  Patch,
 } from '@nestjs/common';
-
 import { PlaylistsService } from './playlist.service';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CreatePlaylistDto, UpdatePlaylistDto } from './dto/playlist.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { UserRoles } from '../Users/dto/user-role';
-import { RolesGuard } from '../guards/roles-guard';
-import { Roles } from '../guards/roles.decorator';
-import { CreateException } from '../common/exceptions/http.exception';
+import {
+  EXAMPLE_PLAYLIST_BODY,
+  EXAMPLE_PLAYLIST_RESPONSE,
+} from './playlist.swagger.example';
 
 @ApiTags('CRUD for playlist')
 @ApiBearerAuth('access-token')
@@ -25,50 +30,47 @@ export class PlaylistsController {
   constructor(private readonly playlistsService: PlaylistsService) {}
 
   @ApiOperation({ summary: 'Створити блок Playlist' })
-  @Post()
+  @ApiBody({ schema: { example: EXAMPLE_PLAYLIST_BODY } })
+  @ApiResponse({ schema: { example: EXAMPLE_PLAYLIST_RESPONSE } })
+  @Post('/createPlaylist')
+  @UseGuards(AuthGuard('jwt'))
   async addPlaylist(@Body() createPlaylistDto: CreatePlaylistDto) {
-    try {
-      const generatedId = await this.playlistsService.insertPlaylist(
-        createPlaylistDto,
-      );
-
-      return { id: generatedId };
-    } catch (e) {
-      throw new CreateException(`Cannot add new playlist. ${e.message}`);
-    }
+    return await this.playlistsService.insertPlaylist(createPlaylistDto);
   }
 
   @ApiOperation({ summary: 'Get all Playlists' })
-  @Get()
-  @Roles(UserRoles.USER)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @ApiResponse({
+    type: 'array',
+    schema: { example: [EXAMPLE_PLAYLIST_RESPONSE] },
+  })
+  @Get('/getPlaylists')
+  @UseGuards(AuthGuard('jwt'))
   async getAllPlaylists() {
     return await this.playlistsService.getPlaylists();
   }
 
   @ApiOperation({ summary: 'Get current Playlist' })
+  @Get('/getPlaylist/:slug')
   @UseGuards(AuthGuard('jwt'))
-  @Get('/:id')
-  getPlaylist(@Param('id') id: string) {
-    return this.playlistsService.getCurrentPlaylist(id);
+  getPlaylist(@Param('slug') slug: string) {
+    return this.playlistsService.getCurrentPlaylist(slug);
   }
 
   @ApiOperation({ summary: 'Update current Playlist' })
+  @Patch('/updatePlaylist/:slug')
   @UseGuards(AuthGuard('jwt'))
-  @Put()
   async updatePlaylist(
-    @Param('id') prodId: string,
+    @Param('slug') slug: string,
     @Body() updateFields: UpdatePlaylistDto,
   ) {
-    await this.playlistsService.updatePlaylistBySlug(prodId, updateFields);
+    await this.playlistsService.updatePlaylistBySlug(slug, updateFields);
     return null;
   }
 
   @ApiOperation({ summary: 'Delete current Playlist' })
+  @Delete('deletePlaylist/:slug')
   @UseGuards(AuthGuard('jwt'))
-  @Delete(':id')
-  async deletePlaylist(@Param('id') slug: string) {
-    await this.playlistsService.deletePlaylist(slug);
-    return null;
+  async deletePlaylist(@Param('slug') slug: string) {
+    return await this.playlistsService.deletePlaylist(slug);
   }
 }
